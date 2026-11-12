@@ -14,13 +14,16 @@
 └── pages/
     ├── combinational/               # 組合邏輯電路目錄
     │   └── mux-4to1.html            # 範例：4對1多工器
-    └── sequential/                  # 序向邏輯電路目錄
-        └── jk-flipflop.html         # 範例：JK正反器
+    ├── sequential/                  # 序向邏輯電路目錄
+    │   └── jk-flipflop.html         # 範例：JK正反器
+    └── tools/                       # 實用工具目錄
+        └── circuit-builder.html     # 範例：自訂電路圖生成器
 ```
 - **命名規則**：所有 HTML 檔案必須採用 `kebab-case`（小寫英文加連字號，如 `full-adder.html`, `d-flipflop.html`）。
 - **分類規則**：
   - 無記憶性、輸出僅與當前輸入有關之電路，歸類於 `pages/combinational/`。
   - 具記憶性、含時脈 (Clock) 或狀態回授之電路，歸類於 `pages/sequential/`。
+  - 特殊實用工具或產生器，歸類於 `pages/tools/`。
 
 ## 3. 視覺風格與 Design Tokens (`style.css`)
 AI 在撰寫任何內嵌樣式或操作 DOM 狀態時，必須嚴格使用以下 CSS 變數，禁止硬編碼 (Hardcode) 顏色碼：
@@ -49,7 +52,7 @@ AI 在撰寫任何內嵌樣式或操作 DOM 狀態時，必須嚴格使用以下
 當使用者要求「請幫我新增 [某電路元件] 的頁面」時，AI 必須嚴格依照以下 3 步驟執行：
 
 ### Step 1：建立子頁面 HTML 檔案
-- 判斷元件分類，於 `pages/combinational/` 或 `pages/sequential/` 下建立 `.html` 檔。
+- 判斷元件分類，於對應的子目錄下建立 `.html` 檔。
 - 在 `<head>` 引入 `<link rel="stylesheet" href="../../style.css">`，並在 `<body>` 結尾引入 `<script src="../../nav.js"></script>`。
 - 頁面外層架構必須為：
   ```html
@@ -66,15 +69,5 @@ AI 在撰寫任何內嵌樣式或操作 DOM 狀態時，必須嚴格使用以下
 - 切換訊號 `0/1` 時，統一使用 `.classList.toggle('high', val === 1)` 控制視覺發光效果。
 
 ### Step 3：於 `nav.js` 註冊新頁面（自動同步全站）
-- 打開根目錄的 `/nav.js`，在 `WIKI_PAGES` 陣列中新增一筆物件：
-  ```javascript
-  {
-      id: "full-adder",
-      title: "全加器 (Full Adder)",
-      category: "combinational", // 或 "sequential"
-      path: "pages/combinational/full-adder.html",
-      desc: "處理三個位元相加並產生進位之算術組合電路",
-      tags: ["算術電路", "Adder", "SOP"]
-  }
-  ```
+- 打開根目錄的 `/nav.js`，在 `WIKI_PAGES` 陣列中新增一筆物件。
 - **禁止手動修改其他 HTML 檔案的導覽列**：只要更新 `WIKI_PAGES`，全站的側邊欄、搜尋引擎與首頁卡片皆會自動更新。

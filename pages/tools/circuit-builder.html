@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>自訂電路生成器 - Digital Logic Wiki</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside id="sidebar-container" class="sidebar"></aside>
+
+        <main class="main-content">
+            <span class="badge">實用工具 Tools</span>
+            <h1>⚙️ 真值表轉邏輯電路生成器</h1>
+            <p class="subtitle">點擊真值表中的輸出 Y 切換狀態 (0/1)，系統會即時化簡 SOP (積之和) 函數，並自動利用 SVG 渲染出對應的 AND-OR 邏輯閘電路圖。</p>
+
+            <div style="display:flex; gap:30px; align-items:flex-start; flex-wrap:wrap;">
+                
+                <div class="panel" style="flex: 1; min-width:300px; margin-bottom:0;">
+                    <h2>📝 設定二變數真值表</h2>
+                    <table class="truth-table">
+                        <thead>
+                            <tr><th>A</th><th>B</th><th>Y (點擊切換)</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>0</td><td>0</td><td><button class="pin-btn y-btn" onclick="toggleY(0)">0</button></td></tr>
+                            <tr><td>0</td><td>1</td><td><button class="pin-btn y-btn" onclick="toggleY(1)">0</button></td></tr>
+                            <tr><td>1</td><td>0</td><td><button class="pin-btn y-btn" onclick="toggleY(2)">0</button></td></tr>
+                            <tr><td>1</td><td>1</td><td><button class="pin-btn y-btn" onclick="toggleY(3)">0</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="panel" style="flex: 2; min-width:400px; margin-bottom:0;">
+                    <h2>🎨 自動生成邏輯電路圖</h2>
+                    <div class="expression-text" id="boolean-expr">Y = 0</div>
+                    <div class="circuit-canvas" id="circuit-canvas">
+                        <!-- SVG 電路圖將由 JS 動態生成在這裡 -->
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="../../nav.js"></script>
+    <script>
+        let truthTable = [0, 0, 0, 0];
+        const minterms = ["A'B'", "A'B", "AB'", "AB"];
+
+        function toggleY(index) {
+            truthTable[index] = 1 - truthTable[index];
+            const btns = document.querySelectorAll('.y-btn');
+            btns[index].innerText = truthTable[index];
+            btns[index].classList.toggle('high', truthTable[index] === 1);
+            updateCircuitLogic();
+        }
+
+        function updateCircuitLogic() {
+            let activeMinterms = [];
+            for (let i = 0; i < 4; i++) {
+                if (truthTable[i] === 1) activeMinterms.push(minterms[i]);
+            }
+            const exprDisplay = document.getElementById('boolean-expr');
+            if (activeMinterms.length === 0) exprDisplay.innerText = "Y = 0";
+            else if (activeMinterms.length === 4) exprDisplay.innerText = "Y = 1";
+            else exprDisplay.innerText = "Y = " + activeMinterms.join(" + ");
+            
+            drawCircuit(activeMinterms);
+        }
+
+        function drawCircuit(activeMinterms) {
+            const canvas = document.getElementById('circuit-canvas');
+            
+            if (activeMinterms.length === 0) {
+                canvas.innerHTML = '<div style="color:var(--text-muted);">輸出恆為 0，線路直接接地 (GND)。</div>';
+                return;
+            }
+            if (activeMinterms.length === 4) {
+                canvas.innerHTML = '<div style="color:var(--logic-high);">輸出恆為 1，線路直接接電源 (VCC)。</div>';
+                return;
+            }
+
+            let svg = `<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg">`;
+            const wireStyle = `stroke="#64748b" stroke-width="3" fill="none"`;
+            const textStyle = `fill="#f8fafc" font-size="16" font-family="monospace" font-weight="bold"`;
+            const gateStyle = `stroke="#3b82f6" stroke-width="3" fill="#1e293b"`;
+            const andGatePath = `M 0 0 L 20 0 A 20 20 0 0 1 20 40 L 0 40 Z`;
+            const orGatePath  = `M 0 0 Q 15 0 30 20 Q 15 40 0 40 Q 10 20 0 0 Z`;
+
+            const count = activeMinterms.length;
+            const spacing = 350 / (count + 1);
+            let andOutputs = [];
+
+            activeMinterms.forEach((term, index) => {
+                const yPos = spacing * (index + 1) - 20;
+                svg += `<g transform="translate(150, ${yPos})"><path d="${andGatePath}" ${gateStyle}/></g>`;
+                svg += `<text x="160" y="${yPos + 25}" ${textStyle} font-size="12">${term}</text>`;
+                svg += `<line x1="50" y1="${yPos + 10}" x2="150" y2="${yPos + 10}" ${wireStyle}/>`;
+                svg += `<line x1="50" y1="${yPos + 30}" x2="150" y2="${yPos + 30}" ${wireStyle}/>`;
+                
+                let inputs = term.split(/(?=[AB])/);
+                svg += `<text x="30" y="${yPos + 15}" ${textStyle}>${inputs[0]}</text>`;
+                svg += `<text x="30" y="${yPos + 35}" ${textStyle}>${inputs[1]}</text>`;
+                andOutputs.push(yPos + 20);
+            });
+
+            if (count === 1) {
+                svg += `<line x1="190" y1="${andOutputs[0]}" x2="400" y2="${andOutputs[0]}" ${wireStyle}/>`;
+                svg += `<text x="410" y="${andOutputs[0] + 5}" ${textStyle} fill="#10b981">Y</text>`;
+            } else {
+                const orYPos = 175 - 20;
+                svg += `<g transform="translate(350, ${orYPos})"><path d="${orGatePath}" ${gateStyle}/></g>`;
+                andOutputs.forEach((y, i) => {
+                    const orInputY = orYPos + 10 + (20 / (count - 1)) * i;
+                    svg += `<polyline points="190,${y} 270,${y} 270,${orInputY} 355,${orInputY}" ${wireStyle}/>`;
+                });
+                svg += `<line x1="380" y1="175" x2="450" y2="175" ${wireStyle}/>`;
+                svg += `<text x="460" y="180" ${textStyle} fill="#10b981">Y</text>`;
+            }
+            svg += `</svg>`;
+            canvas.innerHTML = svg;
+        }
+
+        updateCircuitLogic();
+    </script>
+</body>
+</html>

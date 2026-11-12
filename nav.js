@@ -1,7 +1,3 @@
-/**
- * WIKI_PAGES 註冊表 (Single Source of Truth)
- * AI Agent 新增頁面時，只需在此陣列加入新物件，全站導覽與首頁卡片將自動更新。
- */
 const WIKI_PAGES = [
     {
         id: "mux-4to1",
@@ -20,15 +16,22 @@ const WIKI_PAGES = [
         path: "pages/sequential/jk-flipflop.html",
         desc: "具備 Hold、Reset、Set 與 Toggle 反轉功能的時脈正緣觸發記憶元件。",
         tags: ["記憶元件", "Flip-Flop", "時脈觸發", "序向邏輯"]
+    },
+    {
+        id: "circuit-builder",
+        title: "⚙️ 自訂電路圖生成器",
+        category: "tools",
+        categoryName: "實用工具 (Tools)",
+        path: "pages/tools/circuit-builder.html",
+        desc: "輸入二變數真值表，系統自動化簡 SOP 布林函數並即時繪製 AND-OR 邏輯閘電路圖。",
+        tags: ["工具", "SOP", "真值表", "電路繪製"]
     }
 ];
 
-// 判斷目前所在路徑層級，自動修正相對路徑
 function getRootPrefix() {
     return window.location.pathname.includes("/pages/") ? "../../" : "";
 }
 
-// 自動渲染左側導覽列
 function renderSidebar() {
     const sidebar = document.getElementById("sidebar-container");
     if (!sidebar) return;
@@ -43,7 +46,8 @@ function renderSidebar() {
 
     const categories = [
         { key: "combinational", label: "組合邏輯 (Combinational)" },
-        { key: "sequential", label: "序向邏輯 (Sequential)" }
+        { key: "sequential", label: "序向邏輯 (Sequential)" },
+        { key: "tools", label: "實用工具 (Tools)" }
     ];
 
     categories.forEach(cat => {
@@ -58,7 +62,6 @@ function renderSidebar() {
     sidebar.innerHTML = html;
 }
 
-// 側邊欄即時搜尋過濾
 function filterSidebar(keyword) {
     const q = keyword.trim().toLowerCase();
     document.querySelectorAll(".wiki-nav-item").forEach(item => {
@@ -67,7 +70,6 @@ function filterSidebar(keyword) {
     });
 }
 
-// 一鍵複製 Verilog 程式碼
 function copyCode(btn) {
     const code = btn.parentElement.nextElementSibling.innerText;
     navigator.clipboard.writeText(code);
@@ -76,7 +78,6 @@ function copyCode(btn) {
     setTimeout(() => btn.innerText = oldText, 1500);
 }
 
-// 隨堂測驗互動回饋
 function checkQuiz(btn, isCorrect, explanation) {
     const box = btn.closest(".quiz-box");
     const feedback = box.querySelector(".quiz-feedback");
