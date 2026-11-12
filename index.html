@@ -32,7 +32,6 @@
                     <button class="clk-btn alt-btn" onclick="renderCards('sequential')">序向邏輯</button>
                     <button class="clk-btn alt-btn" onclick="renderCards('tools')">實用工具</button>
                 </div>
-                
                 <div id="wiki-card-grid" class="card-grid"></div>
             </div>
         </main>
@@ -43,7 +42,6 @@
         function renderCards(filterCat) {
             const grid = document.getElementById("wiki-card-grid");
             const list = filterCat === 'all' ? WIKI_PAGES : WIKI_PAGES.filter(p => p.category === filterCat);
-            
             grid.innerHTML = ''; 
             grid.innerHTML = list.map(p => `
                 <a href="${p.path}" class="wiki-card">
@@ -58,7 +56,6 @@
                 </a>
             `).join('');
         }
-        
         document.addEventListener("DOMContentLoaded", () => renderCards('all'));
     </script>
 </body>

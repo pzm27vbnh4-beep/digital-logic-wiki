@@ -23,31 +23,22 @@ const WIKI_PAGES = [
         category: "tools",
         categoryName: "實用工具 (Tools)",
         path: "pages/tools/circuit-builder.html",
-        desc: "自由手拉黑盒子與連線，即時模擬 AND、OR、NOT 邏輯電路狀態。",
+        desc: "自由手拉黑盒子與連線，即時模擬邏輯電路狀態。並具備 AI 擴充規範。",
         tags: ["工具", "拖曳設計", "Quartus", "電路模擬"]
     }
 ];
-
 function getRootPrefix() { return window.location.pathname.includes("/pages/") ? "../../" : ""; }
-
 function renderSidebar() {
     const sidebar = document.getElementById("sidebar-container");
     if (!sidebar) return;
     const prefix = getRootPrefix();
     const currentPath = window.location.pathname;
-
     let html = `
         <a href="${prefix}index.html" class="brand-title">⚡ Digital Logic Wiki</a>
-        <input type="text" id="sidebar-search" class="search-input" placeholder="🔍 搜尋邏輯元件或標籤..." oninput="filterSidebar(this.value)">
+        <input type="text" id="sidebar-search" class="search-input" placeholder="🔍 搜尋元件..." oninput="filterSidebar(this.value)">
         <a href="${prefix}index.html" class="nav-link ${currentPath.endsWith('index.html') || currentPath.endsWith('/') ? 'active' : ''}">🏠 知識庫首頁</a>
     `;
-
-    const categories = [
-        { key: "combinational", label: "組合邏輯 (Combinational)" },
-        { key: "sequential", label: "序向邏輯 (Sequential)" },
-        { key: "tools", label: "實用工具 (Tools)" }
-    ];
-
+    const categories = [ { key: "combinational", label: "組合邏輯 (Combinational)" }, { key: "sequential", label: "序向邏輯 (Sequential)" }, { key: "tools", label: "實用工具 (Tools)" } ];
     categories.forEach(cat => {
         html += `<div class="nav-section-title">${cat.label}</div>`;
         const pages = WIKI_PAGES.filter(p => p.category === cat.key);
@@ -58,7 +49,6 @@ function renderSidebar() {
     });
     sidebar.innerHTML = html;
 }
-
 function filterSidebar(keyword) {
     const q = keyword.trim().toLowerCase();
     document.querySelectorAll(".wiki-nav-item").forEach(item => {

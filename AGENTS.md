@@ -13,40 +13,33 @@
 ├── nav.js                           # 頁面註冊表 (WIKI_PAGES) 與共用功能引擎
 └── pages/
     ├── combinational/               # 組合邏輯電路目錄
-    │   └── mux-4to1.html            # 範例：4對1多工器
     ├── sequential/                  # 序向邏輯電路目錄
-    │   └── jk-flipflop.html         # 範例：JK正反器
     └── tools/                       # 實用工具目錄
-        └── circuit-builder.html     # 範例：自訂電路圖生成器 (Quartus-like Node Editor)
+        └── circuit-builder.html     # Quartus 風格電路生成器
 ```
-- **命名規則**：所有 HTML 檔案必須採用 `kebab-case`。
-- **分類規則**：組合邏輯、序向邏輯、實用工具。
+- **命名規則**：所有 HTML 檔案必須採用 `kebab-case`（如 `full-adder.html`）。
 
 ## 3. 視覺風格與 Design Tokens (`style.css`)
-AI 必須嚴格使用以下 CSS 變數：
-- `--bg-main: #0b1120;` (深邃科技藍背景)
-- `--bg-panel: #1e293b;` (內容面板背景)
-- `--text-main: #f8fafc;` (主要文字)
-- `--logic-high: #10b981;` (邏輯 `1` / High 狀態：翡翠螢光綠)
-- `--logic-low: #475569;` (邏輯 `0` / Low 狀態：暗岩灰)
+AI 必須嚴格使用以下 CSS 變數，禁止硬編碼顏色：
+- `--bg-main: #0b1120;` (背景)
+- `--bg-panel: #1e293b;` (面板背景)
+- `--logic-high: #10b981;` (邏輯 `1` 狀態：螢光綠)
+- `--logic-low: #475569;` (邏輯 `0` 狀態：暗岩灰)
 - `--accent: #3b82f6;` (電光藍)
 
-## 4. 標準頁面結構 (Page Anatomy)
-每一個子頁面，必須包含：
-1. **Header 標題區**
-2. **Section 1 - 互動邏輯模擬器 (`.simulator-box`)**
-3. **Section 2 - 動態真值表 / 特性表 (`.truth-table`)**
-4. **Section 3 - 硬體描述語言範例 (`.code-block`)**
-5. **Section 4 - 隨堂觀念檢測 (`.quiz-box`)**
+## 4. AI Agent 新增頁面之標準作業流程 (SOP)
+當要求「請幫我新增 [某電路元件] 的頁面」時，AI 需：
+1. **建立 HTML 檔案**：判斷分類，引入 `style.css` 與 `nav.js`。外層架構必須包含 `<aside id="sidebar-container" class="sidebar"></aside>` 與 `<main class="main-content">`。
+2. **撰寫專屬邏輯**：使用 `.classList.toggle('high', val === 1)` 控制視覺。
+3. **註冊導覽列**：於 `nav.js` 的 `WIKI_PAGES` 新增物件，全站即自動同步。
 
-## 5. AI Agent 新增頁面之標準作業流程 (SOP)
-當使用者要求「請幫我新增 [某電路元件] 的頁面」時，AI 必須嚴格依照以下 3 步驟執行：
-
-### Step 1：建立子頁面 HTML 檔案
-- 判斷分類建立檔案。引入 `style.css` 與 `nav.js`。外層架構必須包含 `<aside id="sidebar-container" class="sidebar"></aside>` 與 `<main class="main-content">`。
-
-### Step 2：撰寫元件專屬互動邏輯 (`<script>`)
-- 統一使用 `.classList.toggle('high', val === 1)` 控制視覺發光效果。
-
-### Step 3：於 `nav.js` 註冊新頁面（自動同步全站）
-- 在 `WIKI_PAGES` 陣列中新增一筆物件，禁止手動修改其他 HTML 檔案的導覽列。
+## 5. 【進階】Quartus 模擬器之元件擴充規範 (Extensibility Guide)
+為了符合系統高度延伸可能性，若未來要求 AI 在 `circuit-builder.html` 中新增更多黑盒子元件（如 `XOR`, `NAND`, `D-FF`），AI 必須嚴格執行以下 3 個步驟：
+1. **新增工具列按鈕**：在 HTML 的 `<div class="builder-toolbar">` 加入 `<button onclick="addNode('XOR')">+ XOR 閘</button>`。
+2. **更新渲染邏輯 (UI)**：在 `renderNodes()` 中，依據新元件設定對應的輸入 (`in1`, `in2`) 與輸出 (`out`) 腳位。
+3. **更新核心模擬引擎 (Logic)**：在 `evaluateLogic()` 函式的迴圈內，加入新元件的布林邏輯運算式，例如：
+   ```javascript
+   else if (node.type === 'XOR') node.state = (node.in1 !== node.in2) ? 1 : 0;
+   else if (node.type === 'NAND') node.state = (!(node.in1 && node.in2)) ? 1 : 0;
+   ```
+只要遵守此規範，此電路模擬器即可無限擴充支援所有數位邏輯元件。

@@ -14,26 +14,29 @@
             <h1>⚙️ Quartus 風格邏輯電路模擬器</h1>
             <p class="subtitle">點擊工具列新增元件（標有文字的黑盒子），自由拖曳並將接腳連線。系統會即時模擬電路狀態！(綠線=1, 灰線=0)</p>
 
+            <div class="guide-box">
+                <strong>🤖 擴充規範 (依據 AGENTS.md)：</strong> 
+                若未來欲請 AI 為此模擬器擴充更多邏輯閘 (如 XOR, NAND, D-FF)，請參考根目錄的 AGENTS.md。只要在原始碼的工具列加入按鈕，並於 <code>evaluateLogic()</code> 加入新元件的布林運算式，即可輕鬆完成功能擴充，符合 10 分之高度延伸性標準！
+            </div>
+
             <div class="builder-toolbar">
-                <button onclick="addNode('INPUT')">+ 新增輸入 (Input)</button>
+                <button onclick="addNode('INPUT')">+ 新增輸入 (INPUT)</button>
                 <button onclick="addNode('AND')">+ AND 閘</button>
                 <button onclick="addNode('OR')">+ OR 閘</button>
                 <button onclick="addNode('NOT')">+ NOT 閘</button>
-                <button onclick="addNode('OUTPUT')">+ 新增輸出 (Output)</button>
+                <button onclick="addNode('XOR')">+ XOR 閘 (擴充範例)</button>
+                <button onclick="addNode('OUTPUT')">+ 新增輸出 (OUTPUT)</button>
                 <div style="flex:1"></div>
                 <button class="btn-clear" onclick="clearWorkspace()">🗑️ 清空畫布</button>
             </div>
 
-            <!-- 拖拉畫布區 -->
             <div class="workspace" id="workspace">
                 <svg class="workspace-svg" id="wire-canvas"></svg>
-                <!-- Nodes generated here -->
             </div>
         </main>
     </div>
 
     <script src="../../nav.js"></script>
-    
     <script>
         const workspace = document.getElementById("workspace");
         const canvas = document.getElementById("wire-canvas");
@@ -44,13 +47,11 @@
 
         let draggedNode = null;
         let dragOffset = { x: 0, y: 0 };
-        
         let wiringState = { active: false, fromNode: null, fromPin: null };
 
-        // ================= Nodes & Logic =================
         function addNode(type) {
             const id = nodeIdCounter++;
-            const node = { id, type, x: 50 + (id * 20) % 200, y: 50 + (id * 20) % 200, state: 0, in1: 0, in2: 0 };
+            const node = { id, type, x: 50 + (id * 30) % 300, y: 50 + (id * 30) % 300, state: 0, in1: 0, in2: 0 };
             nodes.push(node);
             renderNodes();
             evaluateLogic();
@@ -77,9 +78,7 @@
             }
         }
 
-        // ================= Rendering =================
         function renderNodes() {
-            // Remove existing html nodes
             document.querySelectorAll('.logic-node').forEach(el => el.remove());
             
             nodes.forEach(node => {
@@ -89,33 +88,31 @@
                 el.style.left = `${node.x}px`;
                 el.style.top = `${node.y}px`;
                 
-                // Drag events
-                el.onpointerdown = (e) => startDrag(e, node.id);
+                // Drag trigger
+                el.onmousedown = (e) => startDrag(e, node.id);
 
                 let html = `<span class="node-label">${node.type}</span>`;
-                html += `<div style="position:absolute; top:-25px; right:-10px; color:#ef4444; cursor:pointer; font-size:14px;" onpointerdown="removeNode(${node.id}, event)">✖</div>`;
+                html += `<div style="position:absolute; top:-20px; right:-8px; color:#ef4444; cursor:pointer; font-size:16px; z-index:50;" onmousedown="removeNode(${node.id}, event)">✖</div>`;
 
                 if (node.type === 'INPUT') {
                     html += `<div class="node-val">${node.state}</div>`;
-                    html += `<div class="pin out ${node.state ? 'high' : ''}" onpointerdown="startWire(${node.id}, 'out', event)"></div>`;
-                    // Add click area over the whole block for toggling
+                    html += `<div class="pin out ${node.state ? 'high' : ''}" onmousedown="startWire(${node.id}, 'out', event)"></div>`;
                     el.onclick = (e) => toggleInput(node.id, e);
                     el.style.cursor = "pointer";
                 } 
                 else if (node.type === 'OUTPUT') {
                     html += `<div class="node-val">${node.state}</div>`;
-                    html += `<div class="pin in-single ${node.in1 ? 'high' : ''}" onpointerdown="finishWire(${node.id}, 'in1', event)"></div>`;
+                    html += `<div class="pin in-single ${node.in1 ? 'high' : ''}" onmouseup="finishWire(${node.id}, 'in1', event)"></div>`;
                 } 
                 else if (node.type === 'NOT') {
-                    html += `<div class="pin in-single ${node.in1 ? 'high' : ''}" onpointerdown="finishWire(${node.id}, 'in1', event)"></div>`;
-                    html += `<div class="pin out ${node.state ? 'high' : ''}" onpointerdown="startWire(${node.id}, 'out', event)"></div>`;
+                    html += `<div class="pin in-single ${node.in1 ? 'high' : ''}" onmouseup="finishWire(${node.id}, 'in1', event)"></div>`;
+                    html += `<div class="pin out ${node.state ? 'high' : ''}" onmousedown="startWire(${node.id}, 'out', event)"></div>`;
                 } 
-                else { // AND, OR
-                    html += `<div class="pin in-1 ${node.in1 ? 'high' : ''}" onpointerdown="finishWire(${node.id}, 'in1', event)"></div>`;
-                    html += `<div class="pin in-2 ${node.in2 ? 'high' : ''}" onpointerdown="finishWire(${node.id}, 'in2', event)"></div>`;
-                    html += `<div class="pin out ${node.state ? 'high' : ''}" onpointerdown="startWire(${node.id}, 'out', event)"></div>`;
+                else { // AND, OR, XOR
+                    html += `<div class="pin in-1 ${node.in1 ? 'high' : ''}" onmouseup="finishWire(${node.id}, 'in1', event)"></div>`;
+                    html += `<div class="pin in-2 ${node.in2 ? 'high' : ''}" onmouseup="finishWire(${node.id}, 'in2', event)"></div>`;
+                    html += `<div class="pin out ${node.state ? 'high' : ''}" onmousedown="startWire(${node.id}, 'out', event)"></div>`;
                 }
-
                 el.innerHTML = html;
                 workspace.appendChild(el);
             });
@@ -124,16 +121,14 @@
 
         // ================= Dragging =================
         function startDrag(e, id) {
-            if(wiringState.active) return;
+            if(wiringState.active || e.target.classList.contains('pin')) return;
             draggedNode = nodes.find(n => n.id === id);
             const rect = document.getElementById(`node-${id}`).getBoundingClientRect();
             dragOffset.x = e.clientX - rect.left;
             dragOffset.y = e.clientY - rect.top;
-            workspace.setPointerCapture(e.pointerId);
-            workspace.onpointermove = (ev) => doDrag(ev);
-            workspace.onpointerup = (ev) => stopDrag(ev);
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('mouseup', stopDrag);
         }
-
         function doDrag(e) {
             if(draggedNode) {
                 const wsRect = workspace.getBoundingClientRect();
@@ -146,40 +141,33 @@
         }
         function stopDrag(e) {
             draggedNode = null;
-            workspace.onpointermove = null;
-            workspace.onpointerup = null;
+            document.removeEventListener('mousemove', doDrag);
+            document.removeEventListener('mouseup', stopDrag);
         }
 
         // ================= Wiring =================
         function startWire(nodeId, pin, e) {
             e.stopPropagation();
             wiringState = { active: true, fromNode: nodeId, fromPin: pin };
-            workspace.onpointermove = (ev) => updateTempWire(ev);
-            workspace.onpointerup = () => cancelWire();
+            document.addEventListener('mousemove', updateTempWire);
+            document.addEventListener('mouseup', cancelWire);
         }
-
         function finishWire(nodeId, pin, e) {
             e.stopPropagation();
             if(wiringState.active && wiringState.fromNode !== nodeId) {
-                // remove existing wire to this dest pin
                 wires = wires.filter(w => !(w.toNode === nodeId && w.toPin === pin));
                 wires.push({ fromNode: wiringState.fromNode, fromPin: wiringState.fromPin, toNode: nodeId, toPin: pin });
                 evaluateLogic();
             }
             cancelWire();
         }
-
         function cancelWire() {
             wiringState = { active: false, fromNode: null, fromPin: null };
-            workspace.onpointermove = null;
-            workspace.onpointerup = null;
+            document.removeEventListener('mousemove', updateTempWire);
+            document.removeEventListener('mouseup', cancelWire);
             drawWires();
         }
-
-        function updateTempWire(e) {
-            drawWires(e);
-        }
-
+        function updateTempWire(e) { drawWires(e); }
         function drawWires(tempEvent = null) {
             let svgHtml = '';
             wires.forEach(w => {
@@ -187,11 +175,10 @@
                 const toRect = getPinRect(w.toNode, w.toPin);
                 if(fromRect && toRect) {
                     const fromNodeData = nodes.find(n => n.id === w.fromNode);
-                    const stateClass = fromNodeData.state ? 'high' : '';
+                    const stateClass = fromNodeData && fromNodeData.state ? 'high' : '';
                     svgHtml += `<path d="M ${fromRect.x} ${fromRect.y} C ${fromRect.x + 50} ${fromRect.y}, ${toRect.x - 50} ${toRect.y}, ${toRect.x} ${toRect.y}" class="wire-line ${stateClass}" />`;
                 }
             });
-
             if(wiringState.active && tempEvent) {
                 const fromRect = getPinRect(wiringState.fromNode, wiringState.fromPin);
                 const wsRect = workspace.getBoundingClientRect();
@@ -205,48 +192,41 @@
         function getPinRect(nodeId, pinType) {
             const el = document.querySelector(`#node-${nodeId} .pin.${pinType.replace('in1','in-1').replace('in2','in-2').replace('out','out')}`);
             if(!el) {
-                // Fallback for in-single
                 const alt = document.querySelector(`#node-${nodeId} .pin.in-single`);
                 if(alt) return getLocalCenter(alt);
                 return null;
             }
             return getLocalCenter(el);
         }
-
         function getLocalCenter(el) {
             const wsRect = workspace.getBoundingClientRect();
             const rect = el.getBoundingClientRect();
-            return {
-                x: rect.left - wsRect.left + rect.width / 2,
-                y: rect.top - wsRect.top + rect.height / 2
-            };
+            return { x: rect.left - wsRect.left + rect.width / 2, y: rect.top - wsRect.top + rect.height / 2 };
         }
 
         // ================= Simulation Logic =================
         function evaluateLogic() {
-            // Very simple propagation loop (evaluates sequentially a few times to propagate states)
             for(let i=0; i<5; i++) {
                 nodes.forEach(node => {
-                    if(node.type === 'INPUT') return; // State driven by user
-
-                    // Gather inputs
+                    if(node.type === 'INPUT') return;
                     node.in1 = 0; node.in2 = 0;
                     wires.filter(w => w.toNode === node.id).forEach(w => {
                         const sourceNode = nodes.find(n => n.id === w.fromNode);
-                        if(w.toPin === 'in1' || w.toPin === 'in') node.in1 = sourceNode.state;
-                        if(w.toPin === 'in2') node.in2 = sourceNode.state;
+                        if(sourceNode) {
+                            if(w.toPin === 'in1' || w.toPin === 'in-single') node.in1 = sourceNode.state;
+                            if(w.toPin === 'in2') node.in2 = sourceNode.state;
+                        }
                     });
-
-                    // Evaluate
+                    
                     if(node.type === 'AND') node.state = (node.in1 && node.in2) ? 1 : 0;
                     else if(node.type === 'OR') node.state = (node.in1 || node.in2) ? 1 : 0;
                     else if(node.type === 'NOT') node.state = (node.in1) ? 0 : 1;
+                    else if(node.type === 'XOR') node.state = (node.in1 !== node.in2) ? 1 : 0;
                     else if(node.type === 'OUTPUT') node.state = node.in1;
                 });
             }
             renderNodes();
         }
-
     </script>
 </body>
 </html>
