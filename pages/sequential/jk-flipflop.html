@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>JK 正反器 (JK Flip-Flop) - Digital Logic Wiki</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside id="sidebar-container" class="sidebar"></aside>
+
+        <main class="main-content">
+            <span class="badge">序向邏輯 Sequential Logic</span>
+            <h1>JK 正反器 (JK Flip-Flop)</h1>
+            <p class="subtitle">萬用型序向記憶元件，改良自 SR 正反器，當 $J=1, K=1$ 時具備將狀態反轉 (Toggle) 的特性，廣泛應用於同步計數器設計。</p>
+
+            <!-- 1. 互動模擬器 -->
+            <div class="panel simulator-box">
+                <h2>🎛️ 時脈邊緣觸發模擬器</h2>
+                <div class="sim-grid">
+                    <div>
+                        <div class="pin-row"><span class="pin-label">J</span><button id="btn-j" class="pin-btn" onclick="toggleJK('j')">0</button></div>
+                        <div class="pin-row"><span class="pin-label">K</span><button id="btn-k" class="pin-btn" onclick="toggleJK('k')">0</button></div>
+                    </div>
+
+                    <div class="chip-box">
+                        <div style="font-weight:800; font-size:1.2rem; color:#60a5fa; margin-bottom:12px;">7476 JK-FF</div>
+                        <button class="clk-btn" onclick="triggerClock()">⚡ 觸發時脈正緣 (CLK ↑)</button>
+                        <button class="clk-btn" style="background:#475569; margin-left:6px;" onclick="resetFF()">清除 (CLR)</button>
+                        <div id="history-log" style="margin-top:14px; font-family:monospace; font-size:0.85rem; color:var(--text-muted);">
+                            狀態歷程 Q：0
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:18px; text-align:center;">
+                        <div>
+                            <div style="color:var(--text-muted); margin-bottom:6px;">輸出 Q</div>
+                            <div id="out-q" class="led-out">0</div>
+                        </div>
+                        <div>
+                            <div style="color:var(--text-muted); margin-bottom:6px;">反相 Q'</div>
+                            <div id="out-qb" class="led-out high">1</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 動態真值表 -->
+            <div class="panel">
+                <h2>📊 JK 正反器特性表 (高亮當前預備動作)</h2>
+                <table class="truth-table">
+                    <thead>
+                        <tr><th>J</th><th>K</th><th>CLK</th><th>下一狀態 Q(t+1)</th><th>工作模式</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr id="row-0" class="active-row"><td>0</td><td>0</td><td>↑</td><td>Q(t)</td><td>保持不變 (Hold)</td></tr>
+                        <tr id="row-1"><td>0</td><td>1</td><td>↑</td><td>0</td><td>重置清零 (Reset)</td></tr>
+                        <tr id="row-2"><td>1</td><td>0</td><td>↑</td><td>1</td><td>設定為一 (Set)</td></tr>
+                        <tr id="row-3"><td>1</td><td>1</td><td>↑</td><td>Q'(t)</td><td>反轉狀態 (Toggle)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 3. Verilog HDL -->
+            <div class="panel">
+                <h2>💻 Verilog HDL 硬體描述語言實作</h2>
+                <div class="code-header">
+                    <span>jk_flipflop.v</span>
+                    <button class="copy-btn" onclick="copyCode(this)">📋 複製程式碼</button>
+                </div>
+                <pre class="code-box">module jk_flipflop (
+    input  wire clk, rst_n, J, K,
+    output reg  Q
+);
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            Q <= 1'b0;
+        else begin
+            case ({J, K})
+                2'b00: Q <= Q;      // Hold
+                2'b01: Q <= 1'b0;   // Reset
+                2'b10: Q <= 1'b1;   // Set
+                2'b11: Q <= ~Q;     // Toggle
+            endcase
+        end
+    end
+endmodule</pre>
+            </div>
+
+            <!-- 4. 隨堂測驗 -->
+            <div class="panel quiz-box">
+                <h2>🧠 隨堂觀念檢測</h2>
+                <p>若要使用 JK 正反器設計一個「除頻器 (將時脈頻率除以 2)」或計數器的最低有效位元，應將 J 與 K 腳位如何連接？</p>
+                <div class="quiz-options">
+                    <button class="quiz-btn" onclick="checkQuiz(this, false, 'J=0, K=0 會使正反器永遠保持原狀態 (Hold)，無法計數。')">A. J = 0, K = 0</button>
+                    <button class="quiz-btn" onclick="checkQuiz(this, true, '當 J=1, K=1 時，每次 Clock 正緣都會讓輸出反轉 (0變1、1變0)，正好達成除2計數效果！')">B. J = 1, K = 1 (固定接高電位 Logic 1)</button>
+                </div>
+                <div class="quiz-feedback"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../nav.js"></script>
+    <script>
+        let j = 0, k = 0, q = 0;
+        let history = [0];
+
+        function toggleJK(pin) {
+            if (pin === 'j') j = 1 - j;
+            else k = 1 - k;
+            document.getElementById("btn-j").innerText = j;
+            document.getElementById("btn-k").innerText = k;
+            document.getElementById("btn-j").classList.toggle("high", j === 1);
+            document.getElementById("btn-k").classList.toggle("high", k === 1);
+
+            const modeIdx = j * 2 + k;
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`row-${i}`).classList.toggle("active-row", i === modeIdx);
+            }
+        }
+
+        function triggerClock() {
+            if (j === 0 && k === 1) q = 0;
+            else if (j === 1 && k === 0) q = 1;
+            else if (j === 1 && k === 1) q = 1 - q;
+
+            history.push(q);
+            if (history.length > 8) history.shift();
+            renderJKOutput();
+        }
+
+        function resetFF() {
+            q = 0;
+            history = [0];
+            renderJKOutput();
+        }
+
+        function renderJKOutput() {
+            const outQ = document.getElementById("out-q");
+            const outQb = document.getElementById("out-qb");
+            outQ.innerText = q;
+            outQb.innerText = 1 - q;
+            outQ.classList.toggle("high", q === 1);
+            outQb.classList.toggle("high", q === 0);
+            document.getElementById("history-log").innerText = "狀態歷程 Q：" + history.join(" → ");
+        }
+    </script>
+</body>
+</html>

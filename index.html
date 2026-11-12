@@ -3,19 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>數位邏輯互動知識庫</title>
+    <title>數位邏輯互動知識庫 | Digital Logic Wiki</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>數位邏輯互動知識庫</h1>
-    <p class="desc">國立中央大學電機系 - 數位邏輯設計學習筆記與互動視覺化</p>
-    
-    <div class="nav-grid">
-        <!-- AI 未來會在這裡加入更多卡片 -->
-        <a href="pages/jk-flipflop.html" class="card">
-            <h2>JK 正反器</h2>
-            <p>互動式時脈與狀態轉移模擬</p>
-        </a>
+    <div class="app-layout">
+        <!-- 自動生成之側邊導覽列 -->
+        <aside id="sidebar-container" class="sidebar"></aside>
+
+        <main class="main-content">
+            <span class="badge">AI-Native Architecture</span>
+            <h1>數位邏輯互動知識庫</h1>
+            <p class="subtitle">結合互動式電路模擬、動態真值表與 Verilog HDL 的模組化工程筆記系統</p>
+
+            <!-- 專案架構亮點說明 -->
+            <div class="panel">
+                <h2>🤖 為什麼這套系統適合 AI 持續擴充？ (AGENTS.md 規範)</h2>
+                <p>本專案採用 <strong>Single Source of Truth (單一事實來源)</strong> 架構設計。透過根目錄的 <code>AGENTS.md</code> 規範，當 AI 被要求新增一個電路頁面（如全加器、計數器）時：</p>
+                <ul>
+                    <li><strong>統一視覺與元件：</strong>直接套用 <code>style.css</code> 的 Design Tokens 與 5 大標準區塊模板。</li>
+                    <li><strong>全站導覽自動同步：</strong>AI 只需將新頁面資訊註冊至 <code>nav.js</code> 的 <code>WIKI_PAGES</code> 陣列，全站側邊欄與首頁卡片即自動更新，消除了傳統靜態網站逐頁修改連結的維護成本。</li>
+                </ul>
+            </div>
+
+            <!-- 首頁篩選與卡片列表 -->
+            <div class="panel">
+                <h2>📚 電路元件探索</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="clk-btn" onclick="renderCards('all')">全部顯示</button>
+                    <button class="clk-btn" style="background:#334155;" onclick="renderCards('combinational')">組合邏輯 (Combinational)</button>
+                    <button class="clk-btn" style="background:#334155;" onclick="renderCards('sequential')">序向邏輯 (Sequential)</button>
+                </div>
+                <div id="wiki-card-grid" class="card-grid"></div>
+            </div>
+        </main>
     </div>
+
+    <script src="nav.js"></script>
+    <script>
+        function renderCards(filterCat) {
+            const grid = document.getElementById("wiki-card-grid");
+            const list = filterCat === 'all' ? WIKI_PAGES : WIKI_PAGES.filter(p => p.category === filterCat);
+            grid.innerHTML = list.map(p => `
+                <a href="${p.path}" class="wiki-card">
+                    <div>
+                        <span class="badge">${p.categoryName}</span>
+                        <h3 style="margin: 6px 0 10px 0; color: #60a5fa;">${p.title}</h3>
+                        <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0;">${p.desc}</p>
+                    </div>
+                    <div class="tag-list">
+                        ${p.tags.map(t => `<span class="tag">#${t}</span>`).join('')}
+                    </div>
+                </a>
+            `).join('');
+        }
+        document.addEventListener("DOMContentLoaded", () => renderCards('all'));
+    </script>
 </body>
 </html>

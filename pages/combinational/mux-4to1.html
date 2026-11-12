@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>4對1 多工器 (4-to-1 MUX) - Digital Logic Wiki</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside id="sidebar-container" class="sidebar"></aside>
+
+        <main class="main-content">
+            <span class="badge">組合邏輯 Combinational Logic</span>
+            <h1>4對1 多工器 (4-to-1 Multiplexer)</h1>
+            <p class="subtitle">俗稱「資料選擇器 (Data Selector)」，根據選擇線 $S_1, S_0$ 的二進位數值，決定將哪一個輸入通道 ($D_0 \sim D_3$) 的訊號傳遞至輸出端 $Y$。</p>
+
+            <!-- 1. 互動邏輯模擬器 -->
+            <div class="panel simulator-box">
+                <h2>🎛️ 互動電路模擬器 (點擊切換 0 / 1)</h2>
+                <div class="sim-grid">
+                    <!-- 資料輸入端 -->
+                    <div>
+                        <div style="color:var(--text-muted); margin-bottom:8px; font-weight:bold;">資料輸入 (Data Inputs)</div>
+                        <div class="pin-row"><span class="pin-label">D0</span><button id="d0" class="pin-btn" onclick="toggleD(0)">0</button></div>
+                        <div class="pin-row"><span class="pin-label">D1</span><button id="d1" class="pin-btn high" onclick="toggleD(1)">1</button></div>
+                        <div class="pin-row"><span class="pin-label">D2</span><button id="d2" class="pin-btn" onclick="toggleD(2)">0</button></div>
+                        <div class="pin-row"><span class="pin-label">D3</span><button id="d3" class="pin-btn high" onclick="toggleD(3)">1</button></div>
+                    </div>
+
+                    <!-- 晶片與選擇線 -->
+                    <div class="chip-box">
+                        <div style="font-weight:800; font-size:1.2rem; color:#60a5fa; margin-bottom:10px;">4-to-1 MUX</div>
+                        <div id="active-channel-msg" style="margin-bottom:16px; color:var(--logic-high); font-family:monospace;">導通通道：D0</div>
+                        <div style="border-top:1px solid var(--border); padding-top:12px;">
+                            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">選擇線 (Select Lines)</div>
+                            <button id="s1" class="pin-btn" onclick="toggleS(1)">S1 = 0</button>
+                            <button id="s0" class="pin-btn" onclick="toggleS(0)">S0 = 0</button>
+                        </div>
+                    </div>
+
+                    <!-- 輸出端 -->
+                    <div style="text-align:center;">
+                        <div style="color:var(--text-muted); margin-bottom:10px; font-weight:bold;">輸出結果 (Output Y)</div>
+                        <div id="mux-out" class="led-out">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 動態真值表 -->
+            <div class="panel">
+                <h2>📊 動態真值表 (自動高亮目前選擇通道)</h2>
+                <table class="truth-table">
+                    <thead>
+                        <tr><th>S1</th><th>S0</th><th>選中通道</th><th>輸出函數 Y</th><th>目前通道數值</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr id="row-0"><td>0</td><td>0</td><td>D0</td><td>S1' · S0' · D0</td><td id="val-0">0</td></tr>
+                        <tr id="row-1"><td>0</td><td>1</td><td>D1</td><td>S1' · S0 · D1</td><td id="val-1">1</td></tr>
+                        <tr id="row-2"><td>1</td><td>0</td><td>D2</td><td>S1 · S0' · D2</td><td id="val-2">0</td></tr>
+                        <tr id="row-3"><td>1</td><td>1</td><td>D3</td><td>S1 · S0 · D3</td><td id="val-3">1</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 3. Verilog HDL 範例 -->
+            <div class="panel">
+                <h2>💻 Verilog HDL 硬體描述語言實作</h2>
+                <div class="code-header">
+                    <span>mux_4to1.v</span>
+                    <button class="copy-btn" onclick="copyCode(this)">📋 複製程式碼</button>
+                </div>
+                <pre class="code-box">module mux_4to1 (
+    input  wire [3:0] D,
+    input  wire [1:0] S,
+    output reg        Y
+);
+    always @(*) begin
+        case (S)
+            2'b00: Y = D[0];
+            2'b01: Y = D[1];
+            2'b10: Y = D[2];
+            2'b11: Y = D[3];
+        endcase
+    end
+endmodule</pre>
+            </div>
+
+            <!-- 4. 隨堂測驗 -->
+            <div class="panel quiz-box">
+                <h2>🧠 隨堂觀念檢測</h2>
+                <p>當選擇線輸入為 <code>S1 = 1, S0 = 0</code>，且資料輸入為 <code>D0=1, D1=1, D2=0, D3=1</code> 時，多工器輸出 <code>Y</code> 為何？</p>
+                <div class="quiz-options">
+                    <button class="quiz-btn" onclick="checkQuiz(this, false, 'S1=1, S0=0 對應十進位的 2，因此會選擇 D2 通道喔！')">A. Y = 1（因為多數輸入為 1）</button>
+                    <button class="quiz-btn" onclick="checkQuiz(this, true, '二進位 10 代表選中通道 D2，而 D2 的值為 0，故輸出 Y = 0。')">B. Y = 0（因為選中 D2 通道）</button>
+                </div>
+                <div class="quiz-feedback"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../nav.js"></script>
+    <script>
+        let D = [0, 1, 0, 1];
+        let S = [0, 0]; // S[0]=S0, S[1]=S1
+
+        function toggleD(idx) {
+            D[idx] = 1 - D[idx];
+            updateMuxUI();
+        }
+        function toggleS(bit) {
+            S[bit] = 1 - S[bit];
+            updateMuxUI();
+        }
+        function updateMuxUI() {
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`d${i}`);
+                btn.innerText = D[i];
+                btn.classList.toggle("high", D[i] === 1);
+                document.getElementById(`val-${i}`).innerText = D[i];
+            }
+            const s1Btn = document.getElementById("s1");
+            const s0Btn = document.getElementById("s0");
+            s1Btn.innerText = `S1 = ${S[1]}`;
+            s0Btn.innerText = `S0 = ${S[0]}`;
+            s1Btn.classList.toggle("high", S[1] === 1);
+            s0Btn.classList.toggle("high", S[0] === 1);
+
+            const selectedIdx = S[1] * 2 + S[0];
+            const yVal = D[selectedIdx];
+
+            document.getElementById("active-channel-msg").innerText = `導通通道：D${selectedIdx} (輸出 ${yVal})`;
+            const outEl = document.getElementById("mux-out");
+            outEl.innerText = yVal;
+            outEl.classList.toggle("high", yVal === 1);
+
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`row-${i}`).classList.toggle("active-row", i === selectedIdx);
+            }
+        }
+        updateMuxUI();
+    </script>
+</body>
+</html>
