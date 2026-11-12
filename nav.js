@@ -19,18 +19,16 @@ const WIKI_PAGES = [
     },
     {
         id: "circuit-builder",
-        title: "⚙️ 自訂電路圖生成器",
+        title: "⚙️ Quartus 風格電路生成器",
         category: "tools",
         categoryName: "實用工具 (Tools)",
         path: "pages/tools/circuit-builder.html",
-        desc: "輸入二變數真值表，系統自動化簡 SOP 布林函數並即時繪製 AND-OR 邏輯閘電路圖。",
-        tags: ["工具", "SOP", "真值表", "電路繪製"]
+        desc: "自由手拉黑盒子與連線，即時模擬 AND、OR、NOT 邏輯電路狀態。",
+        tags: ["工具", "拖曳設計", "Quartus", "電路模擬"]
     }
 ];
 
-function getRootPrefix() {
-    return window.location.pathname.includes("/pages/") ? "../../" : "";
-}
+function getRootPrefix() { return window.location.pathname.includes("/pages/") ? "../../" : ""; }
 
 function renderSidebar() {
     const sidebar = document.getElementById("sidebar-container");
@@ -58,7 +56,6 @@ function renderSidebar() {
             html += `<a href="${prefix}${p.path}" class="nav-link wiki-nav-item ${isActive}" data-search="${p.title.toLowerCase()} ${p.tags.join(' ').toLowerCase()}">${p.title}</a>`;
         });
     });
-
     sidebar.innerHTML = html;
 }
 
@@ -69,7 +66,6 @@ function filterSidebar(keyword) {
         item.style.display = text.includes(q) ? "block" : "none";
     });
 }
-
 function copyCode(btn) {
     const code = btn.parentElement.nextElementSibling.innerText;
     navigator.clipboard.writeText(code);
@@ -77,7 +73,6 @@ function copyCode(btn) {
     btn.innerText = "✅ 已複製！";
     setTimeout(() => btn.innerText = oldText, 1500);
 }
-
 function checkQuiz(btn, isCorrect, explanation) {
     const box = btn.closest(".quiz-box");
     const feedback = box.querySelector(".quiz-feedback");
@@ -92,5 +87,4 @@ function checkQuiz(btn, isCorrect, explanation) {
         feedback.innerHTML = "❌ 再想一下！ " + explanation;
     }
 }
-
 document.addEventListener("DOMContentLoaded", renderSidebar);
